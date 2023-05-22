@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+		<link rel="stylesheet" type="text/css" href="css/classic-game.css" />
+		<link rel="stylesheet" type="text/css" href="css/classic-game-home.css" />
+		<link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+		<script type="text/javascript" src="js/jquery.js"></script>
+		<script type="text/javascript" src="js/jquery-buzz.js"></script>
+		<script src="../js/env-vars.js"></script>
+		<script src="../js/local_storage_manager.js"></script>
+		<script src="../js/shared.js"></script>
+		<script src="../js/scoreboard.js"></script>
+
+		<script type="text/javascript" src="js/tools.js"></script>
+		<script type="text/javascript" src="js/board.js"></script>
+		<script type="text/javascript" src="js/paths.js"></script>
+		<script type="text/javascript" src="js/bubbles.js"></script>
+		<script type="text/javascript" src="js/fruits.js"></script>
+		<script type="text/javascript" src="js/classic-game.js"></script>
+		<script type="text/javascript" src="js/ghosts.js"></script>
+		<script type="text/javascript" src="js/home.js"></script>
+        <script type="text/javascript" src="js/sound.js"></script>
+
+		<script type="text/javascript">
+
+			$(document).ready(function() { 
+				//$.mobile.loading().hide();
+				var localStoreManager = new LocalStorageManager;
+				localStoreManager.setGameName("Classic-Game");
+				loadScoreboard(localStoreManager);
+        		fillScoreboardPage(localStoreManager);
+
+				var ctx = null;
+				var canvas = document.getElementById('canvas-panel-title-classic-game');
+				canvas.setAttribute('width', '38');
+				canvas.setAttribute('height', '32');
+				if (canvas.getContext) { 
+					ctx = canvas.getContext('2d');
+				}
+
+				var x = 15;
+				var y = 16;
+
+				ctx.fillStyle = "#fff200";
+				ctx.beginPath();
+				ctx.arc(x, y, 14, (0.35 - (3 * 0.05)) * Math.PI, (1.65 + (3 * 0.05)) * Math.PI, false);
+				ctx.lineTo(x - 5, y);
+				ctx.fill();
+				ctx.closePath();
+
+				x = 32;
+				y = 16;
+
+				ctx.fillStyle = "#dca5be";
+				ctx.beginPath();
+				ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
+				ctx.fill();
+				ctx.closePath();
+
+				setUpScoreboardDeamonLoader(localStoreManager, 1000, true)
+
+				$(".back-button").click(function(e) { 
+					e.stopPropagation();
+					window.location.href='index.html';
+				});
+				
+		});
+
+		</script>
+
+		<title>Streaming Classic Game with Apache Kafka</title>
+	</head>
+
+	<body>
+
+		<div id="panel" class="scoreboardPage">
+			<h1>Classic Game</h1>
+			<canvas id="canvas-panel-title-classic-game"></canvas>
+			<div id="board">
+				<div id="scoreboard"></div>
+			</div>
+			<div class="back-button">- BACK TO GAME -</div>
+		</div>
+
+	</body>
+
+</html>

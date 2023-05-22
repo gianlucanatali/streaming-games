@@ -1,0 +1,2 @@
+DO NOT PUT FILES MANUALLY IN THIS FOLDER!
+See here: [Contributing.md](../../CONTRIBUTING.md)
