@@ -82,6 +82,7 @@ First things first, clone this github repo to your local machine (Use your Termi
 [source,bash]
 ----
 git clone https://github.com/gianlucanatali/streaming-games.git
+cd streaming-games
 ----
 
 

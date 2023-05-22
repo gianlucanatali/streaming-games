@@ -900,7 +900,7 @@ ol > li p, ul > li p, ul dd, ol dd, .olist .olist, .ulist .olist, .olist .ulist 
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p><strong>Streaming Games</strong> is the funniest application that you ever see while applying principles of streaming analytics using <a href="https://confluent.cloud">Confluent Cloud</a>. Built around the different games, this application ingest and store events from the game into Kafka topics and allow you to process them in near real-time using <a href="https://ksqldb.io/">ksqlDB</a>. In order to keep you focused this application is based on fully managed services in Confluent Cloud for both the Apache Kafka cluster as well as ksqlDB.</p>
+<p><strong>Streaming Games</strong> is the funniest application that you ever see while applying principles of streaming analytics using <a href="https://confluent.cloud">Confluent Cloud</a>. Built around the different games, this application ingest and store events from the game into Kafka topics and allow you to process them in near real-time using <a href="https://ksqldb.io/">ksqlDB</a>. In order to keep you focused this application is based on fully managed services in Confluent Cloud for both the Apache Kafka cluster (using Confluent Cloud KORA engine) as well as ksqlDB.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -1033,10 +1033,7 @@ confluent-cli</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">git clone --branch master -n --depth=1 --filter=tree:0 https://github.com/gianlucanatali/demo-scene.git
-cd demo-scene
-git sparse-checkout set --no-cone streaming-games
-git checkout
+<pre class="highlight"><code class="language-bash" data-lang="bash">git clone https://github.com/gianlucanatali/streaming-games.git
 cd streaming-games</code></pre>
 </div>
 </div>
