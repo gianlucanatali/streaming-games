@@ -103,6 +103,9 @@ cp config/demo.cfg.example config/demo.cfg
 ----
 +
 2. Provide the required information on the 'demo.cfg' file
+
+> **Note:**
+> For region choose eu-central-1 or us-east-1.
 +
 [source,bash]
 ----
