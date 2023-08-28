@@ -130,7 +130,12 @@ cp config/demo.cfg.example config/demo.cfg
 +
 [IMPORTANT]
 ====
-we advise using the utility https://github.com/Nike-Inc/gimme-aws-creds[gimme-aws-creds] if you use Okta to login in AWS. You can also use the https://granted.dev/[granted] CLI for AWS credentials. Amend any of the config, AWS region, or Schema Registry region based on your preferences.
+we advise using the utility https://github.com/Nike-Inc/gimme-aws-creds[gimme-aws-creds] if you use Okta to login in AWS. You can also use the https://granted.dev/[granted] CLI for AWS credentials. 
+
+Amend any of the config, AWS region, or Schema Registry region based on your preferences. 
+
+For region choose one of:  eu-central-1 , us-east-1 , ap-southeast-2  (check the https://docs.confluent.io/cloud/current/stream-governance/packages.html#aws-long-aws-regions[Stream Governance - Essential package documentation] as this requirement could change). 
+More regions are available in the https://docs.confluent.io/cloud/current/stream-governance/packages.html#packages[Advanced package].
 ====
 +
 [source,bash]
