@@ -87,7 +87,7 @@ confluent login --save
 
 The --save flag will save your Confluent Cloud login credentials to the ~/.netrc file.
 
-== Step 3. Clone this repo
+=== Step 3. Clone this repo
 Using your Terminal, run the following command to clone the Streaming Scorecard github repo to your local machine:
 
 [source,bash]
@@ -306,7 +306,7 @@ GROUP BY
 
 image::scoreboard.png[]
 
-==== the scoreboard logic
+==== the Scoreboard logic
 Here’s how the scoreboard logic works—ksqlDB supports link:https://docs.ksqldb.io/en/0.14.0-ksqldb/concepts/queries/pull/[pull queries], which allow you to get the latest value for a given key. 
 
 Pull queries are what allow the 2048 app to show you the scoreboard, updated in near-real time. Each query to the STATS_PER_USER table is sent to ksqlDB to get all the players scores for the selected game.
@@ -323,7 +323,7 @@ WHERE GAME_NAME='2048';
 ----
 
 
-== Destroy your resources (Step 9)
+==== Destroy your resources (Step 9)
 (...and save money!)
 
 [IMPORTANT]
