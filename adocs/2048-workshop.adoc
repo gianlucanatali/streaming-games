@@ -1,4 +1,4 @@
-= Streaming Games
+= 9 Steps to Build a Real-Time Scoreboard With Confluent Cloud
 :doctype: book
 :toc:
 :toc-title: Table of Contents
@@ -13,23 +13,38 @@
 
 :imagesdir: images/
 
-*Streaming Games* is the funniest application that you ever see while applying principles of streaming analytics using https://confluent.cloud[Confluent Cloud]. Built around the different games, this application ingest and store events from the game into Kafka topics and allow you to process them in near real-time using https://ksqldb.io/[ksqlDB]. In order to keep you focused this application is based on fully managed services in Confluent Cloud for both the Apache Kafka cluster (using Confluent Cloud KORA engine) as well as ksqlDB.
+
+*Streaming Games* is a fun, simple application that ingests and stores event data from online games into Apache Kafka® topics. 
+Once stored in Kafka topics, game data can be processed in flight using  https://ksqldb.io/[ksqlDB] to create a scoreboard that updates in near-real time.
+In this self-paced workshop, you’ll learn how to apply the principles of streaming analytics to create your own scoreboard around the game 2048.
 
 image::2048.jpg[2048,300,386]
 
+The scoreboard will be a table containing aggregated metrics of players include their:
+
+* Highest score
+* Highest level achieved
+* Number of losses
+
+The scoreboard will continuously update as queries process new events as they occur.
+
+To keep things simple, you’ll be using https://confluent.cloud[Confluent Cloud]. Powered by the cloud-native https://www.confluent.io/blog/cloud-native-data-streaming-kafka-engine/[Kora engine], this fully managed Kafka service will make it easy for you to leverage both the Kafka cluster and ksqlDB powering your streaming scoreboard.
+
+*Streaming Games* is the funniest application that you ever see while applying principles of streaming analytics using https://confluent.cloud[Confluent Cloud]. Built around the different games, this application ingest and store events from the game into Kafka topics and allow you to process them in near real-time using https://ksqldb.io/[ksqlDB]. In order to keep you focused this application is based on fully managed services in Confluent Cloud for both the Apache Kafka cluster (using Confluent Cloud KORA engine) as well as ksqlDB.
+
+
+
 To implement streaming analytics in the game we built a  link:statements.sql[scoreboard using ksqlDB]. The scoreboard will be a table containing aggregated metrics of the players such as their highest score, the highest level achieved, and the number of times that the player loses. As new events arrive the scoreboard gets instantly updated by the continuous queries that keep processing those events as they happen.
 
-== What you are going to need?
+== Requirements
 
-* *Java and Maven* - The UI layer of the application relies on two APIs that are implemented using https://openjdk.java.net/[Java], therefore you will need to have Java 11+ installed to build the source-code. The build itseld is implemented using https://maven.apache.org/[Maven], and it is triggered automatically by Terraform.
-* Install jq on your local computer
+* *Java, Maven, and Terraform* - The UI layer of the application relies on two APIs that are implemented using Java. You will need to have Java 11+ installed to build the source-code. The build itself is implemented using Maven, and it is triggered automatically by Terraform. You will need to have Terraform 0.14+ installed locally using your cloud provider credentials so https://www.terraform.io[Terraform] can create and manage the resources for you.
 * *Confluent Cloud CLI* - During the demo setup, a bash script will set up the whole Confluent Cloud environment for you. To do that it will need to have the Confluent Cloud CLI installed locally. You can find instructions about how to install it https://docs.confluent.io/current/cloud/cli/index.html[here]. v1.7.0 or later is required, logged in with the ``--save`` argument which saves your Confluent Cloud user login credentials or refresh token (in the case of SSO) to the local ``netrc`` file.
-* *Confluent Cloud account* - If you do not have a Confluent Cloud account, you can create it with instructions below. 
-* *Terraform (0.14+)* - The application is automatically created using https://www.terraform.io[Terraform]. Besides having Terraform installed locally, will need to provide your cloud provider credentials so Terraform can create and manage the resources for you.
-* *AWS account* - This demo/Workshop runs on AWS
+* *AWS and Confluent Cloud accounts* - This workshop runs on AWS and uses Confluent Cloud to manage the Kafka cluster and ksqlBD. If you do not have a Confluent Cloud account, you can create it with instructions below.
 
 
-== PRE-WORK: 
+== Pre-Work (Steps 1-3)
+
 
 [IMPORTANT]
 ====
@@ -49,25 +64,27 @@ confluent-cli
 ----
 
 
-=== Step 2. Signup for Confluent Cloud
+=== Step 2. Set up your Confluent Cloud account and CLI
 
-You can Create a Confluent Cloud Account following this link: https://www.confluent.io/confluent-cloud/tryfree/?utm_campaign=tm.campaigns_cd.Q223_EMEA_AWS-Pacman-Workshop&utm_source=marketo&utm_medium=workshop[Try Confluent Cloud For Free (Games Workshop)]
+*Step 2a.* https://login.confluent.io/login[Log in] to Confluent Cloud or https://www.confluent.io/confluent-cloud/tryfree/?utm_campaign=tm.campaigns_cd.Q223_EMEA_AWS-Pacman-Workshop&utm_source=marketo&utm_medium=workshop[sign up]  for Confluent Cloud account. 
+If you want you can create a Confluent Cloud account also from  https://www.confluent.io/partner/amazon-web-services/?utm_campaign=tm.campaigns_cd.mp-workshop-pacman-emea-awsmarketplace&utm_medium=marketingemail[AWS Marketplace]
 
-If you want to create a Confluent Cloud account from the *AWS Marketplace*, follow this link:
-https://www.confluent.io/partner/amazon-web-services/?utm_campaign=tm.campaigns_cd.mp-workshop-pacman-emea-awsmarketplace&utm_medium=marketingemail[Try Confluent Cloud For Free - Sign up from AWS Marketplace (Games Workshop)]
+*Step 2b.* Create a Cloud API Key
 
-==== Step 2a. Create a Cloud API Key
+Once inside your Confluent Cloud UI:
+* Open the https://confluent.cloud/settings/api-keys/create[Confluent Cloud Console], click the *Granular Access* tab, and then click *Next*.
+* Click *Create a New One* to create a tab. Enter the new service account name (`tf_runner`), then click *Next*.
 
-1. Open the https://confluent.cloud/settings/api-keys/create[Confluent Cloud Console] and click **Granular access** tab, and then click **Next**.
-2. Click **Create a new one to create** tab. Enter the new service account name (`tf_runner`), then click **Next**.
-3. The Cloud API key and secret are generated for the `tf_runner` service account. Save your Cloud API key and secret in a secure location. You will need this API key and secret **to use the Confluent Terraform Provider**.
-4. https://confluent.cloud/settings/org/assignments[Assign] the `OrganizationAdmin` role to the `tf_runner` service account by following https://docs.confluent.io/cloud/current/access-management/access-control/cloud-rbac.html#add-a-role-binding-for-a-user-or-service-account[this guide].
+The Cloud API key and secret are then generated for the tf_runner service account. 
+
+* Next, save your Cloud API key and secret in a secure location. (You will need this API key and secret to use the Confluent Terraform Provider.)
+* Assign the `OrganizationAdmin` role to the `tf_runner` service account by following https://docs.confluent.io/cloud/current/access-management/access-control/cloud-rbac.html#add-a-role-binding-for-a-user-or-service-account[this documentation] on role-based access control (RBAC) in Confluent Cloud.
 
 image::https://github.com/confluentinc/terraform-provider-confluent/raw/master/docs/images/OrganizationAdmin.png[Assigning the OrganizationAdmin role to tf_runner service account]
 
-==== Step 2b. Configure the Confluent CLI
+*Step 2c.* Configure the Confluent CLI
 
-1. Log in to the Confluent Cloud CLI:
+Log in to the Confluent Cloud CLI and run the following command:
 
 [source,bash]
 ----
@@ -77,7 +94,7 @@ confluent login --save
 The --save flag will save your Confluent Cloud login credentials to the ~/.netrc file.
 
 == Step 3. Clone this repo
-First things first, clone this github repo to your local machine (Use your Terminal):
+Using your Terminal, run the following command to clone the Streaming Scorecard github repo to your local machine:
 
 [source,bash]
 ----
@@ -85,24 +102,36 @@ git clone https://github.com/gianlucanatali/streaming-games.git
 cd streaming-games
 ----
 
+== Configure and deploy (Steps 4-5)
+
+=== Step 4. Configure the deployment
+
+The whole workshop creation is scripted. The script will leverage Terraform to spin up the other resources needed in AWS.
+
+[IMPORTANT]
+====
+As mentioned previously, the application uses a Kafka cluster running in a fully managed Kafka service. Therefore, the first thing the application will provision is Confluent Cloud resources using the Confluent Cloud CLI. 
+
+If you are interested in learning how you can create a cluster in Confluent Cloud via the Web UI, check out this documentation: https://docs.confluent.io/current/quickstart/cloud-quickstart/index.html[Quick Start for Confluent Cloud].
+
+====
 
 
-== Step 4. Configure the deployment
+Complete the following steps and run the associate commands for each to configure the application for deployment:
 
-The whole workshop creation is scripted. The script will leverage Terraform to:
-* As mentioned before the application uses a Kafka cluster running in a fully managed service for Apache Kafka. Therefore the first thing it will provision is Confluent Cloud resources using the Confluent Cloud CLI. If you are interested in how you can create a cluster in Confluent Cloud via the Web UI have a look at our https://docs.confluent.io/current/quickstart/cloud-quickstart/index.html[Quick Start for Apache Kafka using Confluent Cloud].
-* Spin up the other resources needed in AWS
-
-Run the following steps to configure the workshop
-
-1. Create the demo.cfg file using the example provided in the config folder
+* Create the `demo.cfg` file using the example provided in the config folder
 +
 [source,bash]
 ----
 cp config/demo.cfg.example config/demo.cfg
 ----
 +
-2. Provide the required information on the 'demo.cfg' file
+* Provide the required information on the `demo.cfg` file
++
+[IMPORTANT]
+====
+we advise using the utility https://github.com/Nike-Inc/gimme-aws-creds[gimme-aws-creds] if you use Okta to login in AWS. You can also use the https://granted.dev/[granted] CLI for AWS credentials. Amend any of the config, AWS region, or Schema Registry region based on your preferences.
+====
 +
 [source,bash]
 ----
@@ -112,11 +141,9 @@ export TF_VAR_schema_registry_region="eu-central-1"
 export TF_VAR_confluent_cloud_api_key=="<CONFLUENT_CLOUD_API_KEY>"
 export TF_VAR_confluent_cloud_api_secret="<CONFLUENT_CLOUD_API_SECRET>"
 ----
-we advice using the utility https://github.com/Nike-Inc/gimme-aws-creds[gimme-aws-creds] if you use Okta to login in AWS. You can also use the https://granted.dev/[granted] CLI for AWS creds. 
-Amend any of the config as you see fit for your preference (Like the aws region or Schema registry Region)
 +
-3. If you are not using gimme-aws-creds, create a credential file as described https://registry.terraform.io/providers/hashicorp/aws/latest/docs#shared-configuration-and-credentials-files[here]. 
-The file in ``~/.aws/credentials`` should look like this (An example below)
+* If you are not using gimme-aws-creds, create a credential file as described in https://registry.terraform.io/providers/hashicorp/aws/latest/docs#shared-configuration-and-credentials-files[this Terraform documentation]. 
+The file in ``~/.aws/credentials`` should look like the following example:
 +
 [source,bash]
 ----
@@ -125,8 +152,12 @@ aws_access_key_id=AKIAIOSFODNN7EXAMPLE
 aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 ----
 You can set ``TF_VAR_aws_profile="default"`` in the ``demo.cfg`` file
-+
-4. Notice the optional configuration in the same file. Change the value of  ``TF_VAR_games_list`` so that contains only the game 2048. Also make sure the ``run_as_workshop`` is set to ``true``
+
+
+Take note of the optional configuration in the same file. 
+
+* Change the value of  ``TF_VAR_games_list`` so that contains only the game 2048. 
+* Also make sure the ``run_as_workshop`` is set to ``true``
 +
 [source,bash]
 ----
@@ -139,24 +170,34 @@ export run_as_workshop="true"
 ----
 
 
+=== Step 5. Deploying the application
 
+[IMPORTANT]
+====
+Please note that during deployment, the script takes care of creating the required Kafka topics. There is no need to manually create them.
+====
 
-== Step 5. Deploying the application
+The application is essentially a set of link:https://github.com/gianlucanatali/demo-scene/tree/master/streaming-games/games/2048[HTML/CSS/JS files] that forms a microsite that can be hosted statically anywhere. 
 
-The application is essentially a set of link:https://github.com/gianlucanatali/demo-scene/tree/master/streaming-games/games/2048[HTML/CSS/JS files] that forms a microsite that can be hosted statically anywhere. But for the sake of coolness we will deploy this microsite in a S3 bucket from AWS. This bucket will be created in the same region selected for the Confluent Cloud cluster to ensure that the application will be co-located. The application will emit events that will be processed by a event handler implemented as an API Gateway which uses a Lambda function as backend. This event handler API receives the events and writes them into Kafka using ksqlDB.
+But for the sake of coolness, we will deploy this microsite in a S3 bucket from AWS. 
+
+This bucket will be created in the same region selected for the Confluent Cloud cluster to ensure that the application will be co-located. 
+
+The application will emit events that will be processed by an event handler implemented as an API Gateway using a Lambda function on the backend. This event handler API receives the events and writes them into Kafka using ksqlDB.
+
 
 image::arch.png[align="left"]
 
-Please note that during deployment, the script takes care of creating the required Kafka topics and also the ksqlDB queries. Therefore, there is no need to manually create them.
-
-1. Start the demo creation
+* Start the demo creation
 +
 [source,bash]
 ----
 ./start.sh
 ----
 +
-2. At the end of the provisioning the Output with the demo endpoint will be shown. Paste the demo url in your browser and start playing!
+At the end of the provisioning the Output with the demo endpoint will be shown:
+
+* Paste the demo url in your browser and start playing!
 +
 [source,bash]
 ----
@@ -165,53 +206,67 @@ Outputs:
 Game = https://d************.cloudfront.net/
 ----
 +
-3. Wait for the content to be available
+* Wait for the content to be available
 
-> **Note**
-> It could take a bit of time for the content to be available via cloudfront. If accessing the link returned by the script you see an error message like the one below, don't worry: just give it some more minutes and try the link again. Make sure you are not hitting refresh, as cloudfront might have sent you to a different url. It can take up to 1hr for the cloudfront distribution to be available.
+[IMPORTANT]
+====
+It could take a bit of time for the content to be available via CloudFront. 
+
+If accessing the link returned by the script you see an error message like the one below, don’t worry—just give it some more minutes and try the link again. 
+
+Make sure you are not hitting refresh, as CloudFront might have sent you to a different url. It can take up to one hour for the CloudFront distribution to be available.
 
 image::error-cloud-front.png[]
 
 You can try to speed up this process using the trick explained in this medium article: https://medium.com/the-scale-factory/is-your-cloudfront-distribution-stuck-in-progress-7e3aead1337b[Is your CloudFront distribution stuck “in progress”?]
+====
 
 
-== Step 6. The scoreboard
-The scoreboard can be visualized in real time by clicking on the *SCOREBOARD* link in the 2048 game (top right corner). 
+== Set up your scoreboard (Steps 6-8)
 
-> **Note**
-> At the beginning you will not be able to use this feature, as you first need to create the ksqlDB queries that populate the scoreboard
+=== Step 6. Visualize the scoreboard
+The scoreboard can be visualized in real time by clicking on the SCOREBOARD link in the top right corner of the 2048 game.
+
+[IMPORTANT]
+====
+You will not be able to use this feature until you create the ksqlDB queries that populate the scoreboard.
+====
 
 image::emptyscoreboard.png[2048,400]
 
 
+Before you run your first ksqlDB queries, make sure the data is flowing into Confluent Cloud:
 
-But first let's make sure the data is flowing into the Confluent. 
-
-1. In Confluent UI go to the environment and the cluster within it, created by the terraform script - should start with with ``streaming-games`` 
-
-2. Click on *Topics* and choose ``USER_GAME`` topic 
+* In Confluent UI, go to the environment and the cluster within it that were created by the Terraform script. (It should start with ``streaming-games``.) 
+* Next, click on *Topics* and choose ``USER_GAME`` topic 
 
 image::topicui.png[]
 
-As users engage with the 2048 game, two types of events will be generated. The first is referred to as the "User Game" event and includes information about the user's current game state, such as their score, level, and remaining lives. This event will be triggered every time the user's score changes, advances to a new level, or loses a life.
+As users engage with the 2048 game, two types of events will be generated. 
 
-The second type of event is called the "User Losses" event, which as the name suggests, captures data related to the user's loss in the game. This event is triggered when the player reaches the game-over state.
+The first is referred to as a "User Game" event which includes information about the user’s current game state, such as their score, level, and remaining lives. This event will be triggered every time the user’s score changes, the user advances to a new level, or the user loses a life.
 
-To build a scoreboard out of this, a streaming analytics pipeline will be created to transform these raw events into a table with the scoreboard that is updated in near real-time.
+The second type of event is called the "User Losses" event which, as the name suggests, captures data related to the user’s loss in the game. This event is triggered when the player reaches the game-over state.
+
+A streaming analytics pipeline will be created to transform these raw events into a table with the scoreboard that is updated in near real-time.
+
 
 image::pipeline.png[]
 
-Now that the data is flowing into Confluent, we can create the ksqlDB queries that populate the scoreboard.
+Now that you know that the data is flowing into Confluent, you can create the ksqlDB queries that populate the scoreboard.
 
-== Step 9. Run the ksqlDB queries
+=== Step 7. Run the ksqlDB queries
 
-To implement the pipeline we use ksqlDB. Run the following queries in your ksqlDB instance in Confluent Cloud. Set ``auto.offset.reset`` to ``Earliest``
+To implement the streaming analytics pipeline, you’ll need to use ksqlDB. 
+
+Run the following queries in your ksqlDB instance in Confluent Cloud. 
+
+* Set ``auto.offset.reset`` to ``Earliest``
 
 image::ksqldb-editor-ui.png[]
 
 
-=== Create the LOSSES_PER_USER Table 
-Create a table to count the number of losses for each player.
+* Create the LOSSES_PER_USER table to count the number of losses for each player.
 
 [source,sql]
 ----
@@ -227,8 +282,7 @@ GROUP BY
   USER_KEY;
 ----
 
-=== Create the STATS_PER_USER Table 
-Run this query
+* Create the STATS_PER_USER Table
 
 [source,sql]
 ----
@@ -249,16 +303,14 @@ GROUP BY
   UG.USER_KEY;
 ----
 
-=== Check the scoreboard
-
-Now look at the scoreboard, it should be populated
+*  Now, check the scoreboard to see if it’s populated like the following example.
 
 image::scoreboard.png[]
 
-==== the Scoreboard logic
-ksqlDB supports link:https://docs.ksqldb.io/en/0.14.0-ksqldb/concepts/queries/pull/[Pull queries], where you can get the latest value for a given key. The 2048 app uses this feature in order to show you the scoreboard:
+==== the scoreboard logic
+Here’s how the scoreboard logic works—ksqlDB supports link:https://docs.ksqldb.io/en/0.14.0-ksqldb/concepts/queries/pull/[pull queries], which allow you to get the latest value for a given key. 
 
-A query to the STATS_PER_USER table is sent to ksqlDB, to get all the players scores for the selected game.
+Pull queries are what allow the 2048 app to show you the scoreboard, updated in near-real time. Each query to the STATS_PER_USER table is sent to ksqlDB to get all the players scores for the selected game.
 
 [source,sql]
 ----
@@ -272,15 +324,21 @@ WHERE GAME_NAME='2048';
 ----
 
 
-== Step 10. Destroy the resources (save money!)
+== Destroy your resources (Step 9)
+(...and save money!)
 
-The great thing about Cloud resources is that you can spin the up and down with few commands. Once you are finished with this worksho/demo , remember to destroy the resources you created today, to avoid incuring in charges if you are not planning to use this. You can always spin it up again anytime you want (uncomment the run_as_workshop variable in the config file if you want to automate the creation of ksqlDB queries, so you can demo the app without any manual effort)! 
+[IMPORTANT]
+====
+The great thing about using cloud resources is that you can spin them up and down with just a few commands. 
 
+If you are not planning to use the Streaming Scorecard application again, remember to destroy the resources you created once you are finished with this workshop to avoid incurring additional charges. 
+====
 
-*Note:* When you are done with the application, you can automatically destroy all the resources created using the command below:
+Automatically destroy all the resources created using the following command:
 
 [source,bash]
 ----
 ./stop.sh
 ----
 
+You can always spin these resources back up any time you want. Simply uncomment the run_as_workshop variable in the config file to automate the creation of ksqlDB queries and you can demo the app again without any manual effort!
