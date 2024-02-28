@@ -43,8 +43,6 @@ echo -e "\nSleeping 20 seconds after submitting KSQL queries\n"
 sleep 20
 }
 
-submit_ksqldb_queries ksqldb/statements-core.sql
-
 if [ "$run_as_workshop" == "true" ]; then
     echo "Running as workshop, additional ksqlDB queries will not be run"
 else

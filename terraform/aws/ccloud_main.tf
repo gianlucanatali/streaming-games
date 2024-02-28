@@ -9,6 +9,11 @@ terraform {
 
 data "confluent_organization" "ccloud" {}
 
+data "confluent_flink_region" "cc-flink-region" {
+  cloud   = "AWS"
+  region  = var.aws_region
+}
+
 locals {
   ksql_basic_auth_user_info= "${confluent_api_key.app-ksqldb-api-key.id}:${confluent_api_key.app-ksqldb-api-key.secret}"
 }

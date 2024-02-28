@@ -258,7 +258,7 @@ WHERE ROWKEY->GAME_NAME='2048';
 
 == Step 7. Destroy the resources (save money!)
 
-The great thing about Cloud resources is that you can spin the up and down with few commands. Once you are finished with this worksho/demo , remember to destroy the resources you created today, to avoid incuring in charges if you are not planning to use this. You can always spin it up again anytime you want (uncomment the run_as_workshop variable in the config file if you want to automate the creation of ksqlDB queries, so you can demo the app without any manual effort)! 
+The great thing about Cloud resources is that you can spin the up and down with few commands. Once you are finished with this worksho/demo , remember to destroy the resources you created today, to avoid incuring in charges if you are not planning to use this. You can always spin it up again anytime you want (uncomment the run_as_workshop variable in the config file if you want to automate the creation of Flink statements and ksqlDB queries, so you can demo the app without any manual effort)! 
 
 
 *Note:* When you are done with the application, you can automatically destroy all the resources created using the command below:
