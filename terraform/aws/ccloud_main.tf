@@ -2,10 +2,12 @@ terraform {
   required_providers {
     confluent = {
       source  = "confluentinc/confluent"
-      version = "1.35.0"
+      version = "1.62.0"
     }
   }
 }
+
+data "confluent_organization" "ccloud" {}
 
 locals {
   ksql_basic_auth_user_info= "${confluent_api_key.app-ksqldb-api-key.id}:${confluent_api_key.app-ksqldb-api-key.secret}"
@@ -14,6 +16,34 @@ locals {
 provider "confluent" {
   cloud_api_key    = var.confluent_cloud_api_key
   cloud_api_secret = var.confluent_cloud_api_secret
+}
+
+resource "confluent_schema" "avro-user-game" {
+  schema_registry_cluster {
+    id = confluent_schema_registry_cluster.essentials.id
+  }
+  rest_endpoint = confluent_schema_registry_cluster.essentials.rest_endpoint
+  subject_name = "USER_GAME-value"
+  format = "AVRO"
+  schema = file("./functions/src/main/resources/avro/com/gnatali/streaming/games/avro/user_game.avsc")
+  credentials {
+    key = confluent_api_key.sr_cluster_key.id
+    secret = confluent_api_key.sr_cluster_key.secret
+  }
+}
+
+resource "confluent_schema" "avro-user-losses" {
+  schema_registry_cluster {
+    id = confluent_schema_registry_cluster.essentials.id
+  }
+  rest_endpoint = confluent_schema_registry_cluster.essentials.rest_endpoint
+  subject_name = "USER_LOSSES-value"
+  format = "AVRO"
+  schema = file("./functions/src/main/resources/avro/com/gnatali/streaming/games/avro/user_losses.avsc")
+  credentials {
+    key = confluent_api_key.sr_cluster_key.id
+    secret = confluent_api_key.sr_cluster_key.secret
+  }
 }
 
 resource "confluent_environment" "staging" {
@@ -104,6 +134,7 @@ resource "confluent_kafka_topic" "user_game" {
     id = confluent_kafka_cluster.games-demo.id
   }
   topic_name    = "USER_GAME"
+  partitions_count   = 1
   rest_endpoint = confluent_kafka_cluster.games-demo.rest_endpoint
   credentials {
     key    = confluent_api_key.app-manager-kafka-api-key.id
@@ -116,6 +147,7 @@ resource "confluent_kafka_topic" "user_losses" {
     id = confluent_kafka_cluster.games-demo.id
   }
   topic_name    = "USER_LOSSES"
+  partitions_count   = 1
   rest_endpoint = confluent_kafka_cluster.games-demo.rest_endpoint
   credentials {
     key    = confluent_api_key.app-manager-kafka-api-key.id
@@ -417,3 +449,122 @@ resource "confluent_api_key" "app-ksqldb-api-key" {
     }
   }
 }
+
+
+resource "confluent_service_account" "sr" {
+  display_name = "${local.resource_prefix}-sr-manager"
+  description  = "Service account to manage SR"
+}
+
+resource "confluent_role_binding" "sr_environment_admin" {
+  principal   = "User:${confluent_service_account.sr.id}"
+  role_name   = "EnvironmentAdmin"
+  crn_pattern = confluent_environment.staging.resource_name
+}
+
+resource "confluent_api_key" "sr_cluster_key" {
+  display_name = "sr-key"
+  description  = "key for SR"
+  owner {
+    id          = confluent_service_account.sr.id
+    api_version = confluent_service_account.sr.api_version
+    kind        = confluent_service_account.sr.kind
+  }
+  managed_resource {
+    id          = confluent_schema_registry_cluster.essentials.id
+    api_version = confluent_schema_registry_cluster.essentials.api_version
+    kind        = confluent_schema_registry_cluster.essentials.kind
+    environment {
+      id = confluent_environment.staging.id
+    }
+  }
+  depends_on = [
+    confluent_role_binding.sr_environment_admin
+  ]
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+# --------------------------------------------------------
+# Flink Compute Pool
+# --------------------------------------------------------
+resource "confluent_flink_compute_pool" "cc_flink_compute_pool" {
+  display_name = "cc-flink-compute-pool"
+  cloud        = "AWS"
+  region       = var.aws_region
+  max_cfu      = 5
+  environment {
+    id = confluent_environment.staging.id
+  }
+  depends_on = [
+    confluent_kafka_cluster.games-demo
+  ]
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+# --------------------------------------------------------
+# Role Bindings added for Flink
+# --------------------------------------------------------
+resource "confluent_role_binding" "app-manager_environment_admin" {
+  principal   = "User:${confluent_service_account.app-manager.id}"
+  role_name   = "EnvironmentAdmin"
+  crn_pattern = confluent_environment.staging.resource_name
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+resource "confluent_role_binding" "app-manager_flinkdeveloper" {
+  principal   = "User:${confluent_service_account.app-manager.id}"
+  role_name   = "FlinkDeveloper"
+  crn_pattern = confluent_environment.staging.resource_name
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+resource "confluent_role_binding" "app-manager_flinkadmin" {
+  principal   = "User:${confluent_service_account.app-manager.id}"
+  role_name   = "FlinkAdmin"
+  crn_pattern = confluent_environment.staging.resource_name
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+resource "confluent_role_binding" "app-manager_assigner" {
+  principal   = "User:${confluent_service_account.app-manager.id}"
+  role_name   = "Assigner"
+  crn_pattern = "${data.confluent_organization.ccloud.resource_name}/service-account=${confluent_service_account.app-manager.id}"
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+# --------------------------------------------------------
+# Flink API Keys
+# --------------------------------------------------------
+resource "confluent_api_key" "env-manager-flink-api-key" {
+  display_name = "env-manager-flink-api-key"
+  description  = "Flink API Key that is owned by 'env-manager' service account"
+  owner {
+    id          = confluent_service_account.app-manager.id
+    api_version = confluent_service_account.app-manager.api_version
+    kind        = confluent_service_account.app-manager.kind
+  }
+
+  managed_resource {
+    id          = "aws.${var.aws_region}"
+    api_version = "fcpm/v2"
+    kind        = "Region"
+
+    environment {
+      id = confluent_environment.staging.id
+    }
+  }
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+

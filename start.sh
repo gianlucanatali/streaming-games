@@ -111,13 +111,15 @@ function start_demo {
 
     init_vars_from_tf_output
 
-    KSQLDB_ALREADY_RUN_FILE="${LOGS_FOLDER}/ksqldb-already-run.log"
-    if test -f "$KSQLDB_ALREADY_RUN_FILE"; then
-        echo "KsqlDB was already executed for this workshop, we'll skip it for additional run of the start.sh . Destroy first"
-    else
-        create_ksqldb_app
-        touch $KSQLDB_ALREADY_RUN_FILE
-    fi
+    # lyuen skip this 20240226
+    #
+    # KSQLDB_ALREADY_RUN_FILE="${LOGS_FOLDER}/ksqldb-already-run.log"
+    # if test -f "$KSQLDB_ALREADY_RUN_FILE"; then
+    #     echo "KsqlDB was already executed for this workshop, we'll skip it for additional run of the start.sh . Destroy first"
+    # else
+    #     create_ksqldb_app
+    #     touch $KSQLDB_ALREADY_RUN_FILE
+    # fi
 
     welcome_screen
 

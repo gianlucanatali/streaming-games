@@ -7,6 +7,15 @@ public interface Constants {
     public static final String KSQLDB_API_AUTH_INFO = System.getenv("KSQLDB_API_AUTH_INFO");
     public static final String KSQLDB_ENDPOINT = System.getenv("KSQLDB_ENDPOINT");
 
+    public static final String BOOTSTRAP_SERVER = System.getenv("BOOTSTRAP_SERVER");
+    public static final String KAFKA_API_KEY = System.getenv("KAFKA_API_KEY");
+    public static final String KAFKA_API_SECRET = System.getenv("KAFKA_API_SECRET");
+    public static final String SR_ENDPOINT = System.getenv("SR_ENDPOINT");
+    public static final String SR_API_KEY = System.getenv("SR_API_KEY");
+    public static final String SR_API_SECRET = System.getenv("SR_API_SECRET");
+
+    public static final String KAFKA = "kafka";
+
     public static final String PLAYER_KEY = "player";
     public static final String TOPIC_KEY = "topic";
     public static final String BODY_KEY = "body";

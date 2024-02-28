@@ -33,6 +33,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import com.gnatali.streaming.games.avro.UserGame;
+import com.gnatali.streaming.games.avro.UserLosses;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
 public class EventHandler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
     public static final MediaType MEDIATYPE_JSON = MediaType.parse("application/json; charset=utf-8");
@@ -46,6 +51,10 @@ public class EventHandler implements RequestHandler<Map<String, Object>, Map<Str
     OkHttpClient client = new OkHttpClient.Builder()
             .addInterceptor(new BasicAuthInterceptor(username, password))
             .build();
+
+    public KafkaProducerPropertiesFactory kafkaProducerProperties = new KafkaProducerPropertiesFactoryImpl();
+    private KafkaProducer<String, UserGame> userGameProducer;
+    private KafkaProducer<String, UserLosses> userLossesProducer;
 
     private String post(String url, String json, String accept) throws IOException {
         RequestBody body = RequestBody.create(json, MEDIATYPE_KSQL);
@@ -62,6 +71,20 @@ public class EventHandler implements RequestHandler<Map<String, Object>, Map<Str
         try (Response response = client.newCall(request).execute()) {
             return response.body().string();
         }
+    }
+
+    private KafkaProducer<String, UserGame> createUserGameProducer() {
+        if (userGameProducer == null) {
+            userGameProducer = new KafkaProducer<String, UserGame>(kafkaProducerProperties.getProducerProperties());
+        }
+        return userGameProducer;
+    }
+
+    private KafkaProducer<String, UserLosses> createUserLossesProducer() {
+        if (userLossesProducer == null) {
+            userLossesProducer = new KafkaProducer<String, UserLosses>(kafkaProducerProperties.getProducerProperties());
+        }
+        return userLossesProducer;
     }
 
     public Map<String, Object> handleRequest(final Map<String, Object> request, final Context context) {
@@ -85,7 +108,7 @@ public class EventHandler implements RequestHandler<Map<String, Object>, Map<Str
         Map<String, Object> requestHeaders = (Map<String, Object>) request.get(HEADERS_KEY);
 
         if (requestHeaders.containsKey(ORIGIN_KEY)) {
-
+    
             SsmClient ssmClient = SsmClient.create();
 
             logger.log("Retrieving SSM parameter: " + ORIGIN_ALLOWED_SSM_PARAM);
@@ -98,9 +121,7 @@ public class EventHandler implements RequestHandler<Map<String, Object>, Map<Str
             logger.log("Origin Allowed is " + originAllowedFromSSM);
 
             if (origin.equals(originAllowedFromSSM)) {
-
                 if (request.containsKey(BODY_KEY)) {
-
                     String event = (String) request.get(BODY_KEY);
 
                     logger.log("EVENT: " + gson.toJson(event));
@@ -123,9 +144,36 @@ public class EventHandler implements RequestHandler<Map<String, Object>, Map<Str
                             endpoint = Constants.KSQLDB_ENDPOINT_QUERY;
                             queryObjName = "sql";
                             accept = "application/json";
+                            
                         } else if (Constants.KSQLDB_ENDPOINT_KSQL.equals(payloadEndpoint)) {
                             endpoint = Constants.KSQLDB_ENDPOINT_KSQL;
                             queryObjName = "ksql";
+
+                        } else if (Constants.KAFKA.equals(payloadEndpoint)) {
+                            String topic = payloadRoot.getAsJsonObject().get("topic").getAsString();
+                            if ("USER_GAME".equals(topic)) {
+                                
+                                final UserGame msg = new UserGame (
+                                    payloadRoot.getAsJsonObject().get("user").getAsString(),
+                                    payloadRoot.getAsJsonObject().get("game_name").getAsString(),
+                                    payloadRoot.getAsJsonObject().get("score").getAsInt(),
+                                    payloadRoot.getAsJsonObject().get("lives").getAsInt(),
+                                    payloadRoot.getAsJsonObject().get("level").getAsInt()
+                                );
+                                KafkaProducer<String, UserGame> userGameProducer = createUserGameProducer();
+                                userGameProducer.send(new ProducerRecord<>(topic,null,msg));
+
+                            } else if ("USER_LOSSES".equals(topic)) {
+                                
+                                final UserLosses msg = new UserLosses(
+                                    payloadRoot.getAsJsonObject().get("user").getAsString(),
+                                    payloadRoot.getAsJsonObject().get("game_name").getAsString()
+                                );
+                                KafkaProducer<String, UserLosses> userLossesProducer = createUserLossesProducer();
+                                userLossesProducer.send(new ProducerRecord<>(topic, null, msg));
+
+                            }
+                            return response;
 
                         } else {
                             StringBuilder message = new StringBuilder();
