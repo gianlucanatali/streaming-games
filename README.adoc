@@ -237,7 +237,7 @@ You can check the status of the running Flink Statements by clicking "Flink (pre
 
 image::flink-running-statements.png[]
 
-Finally, we use ksqlDB to materialize the STATS_PER_USER table created by Flink by creating a source table:
+Finally, we use ksqlDB to materialize the STATS_PER_USER table created by Flink with a source table:
 
 [source,sql]
 ----
