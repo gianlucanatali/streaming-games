@@ -29,6 +29,8 @@ function create_infra_with_tf (){
     # source $DELTA_CONFIGS_DIR/env.delta
     
     # create_tfvars_file
+
+    export TF_VAR_run_as_workshop=$run_as_workshop
     cd $TFS_PATH
     terraform init
     terraform apply --auto-approve

@@ -2,6 +2,7 @@
 # Flink SQL: CREATE TABLE LOSSES_PER_USER
 # --------------------------------------------------------
 resource "confluent_flink_statement" "create_losses_per_user" {
+  count = var.run_as_workshop ? 0 : 1
   depends_on = [
     resource.confluent_environment.staging,
     resource.confluent_schema_registry_cluster.essentials,
@@ -39,6 +40,7 @@ resource "confluent_flink_statement" "create_losses_per_user" {
 # Flink SQL: INSERT INTO TABLE LOSSES_PER_USER
 # --------------------------------------------------------
 resource "confluent_flink_statement" "insert_losses_per_user" {
+  count = var.run_as_workshop ? 0 : 1
   depends_on = [
     resource.confluent_flink_statement.create_losses_per_user
   ]
@@ -73,6 +75,7 @@ resource "confluent_flink_statement" "insert_losses_per_user" {
 # Flink SQL: CREATE TABLE STATS_PER_USER
 # --------------------------------------------------------
 resource "confluent_flink_statement" "create_stats_per_user" {
+  count = var.run_as_workshop ? 0 : 1
   depends_on = [
     resource.confluent_environment.staging,
     resource.confluent_schema_registry_cluster.essentials,
@@ -110,6 +113,7 @@ resource "confluent_flink_statement" "create_stats_per_user" {
 # Flink SQL: INSERT INTO TABLE STATS_PER_USER
 # --------------------------------------------------------
 resource "confluent_flink_statement" "insert_stats_per_user" {
+  count = var.run_as_workshop ? 0 : 1
   depends_on = [
     resource.confluent_flink_statement.create_stats_per_user
   ]

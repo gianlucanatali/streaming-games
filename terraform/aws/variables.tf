@@ -55,3 +55,8 @@ variable "games_list" {
   type = set(string)
   default = ["2048"]
 }
+
+variable "run_as_workshop" {
+  type = bool
+  default = false
+}
