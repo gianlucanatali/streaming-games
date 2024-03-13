@@ -284,7 +284,10 @@ CREATE TABLE LOSSES_PER_USER (
 );
 ----
 
+
 image::create-table-losses-per-user.png[]
+
+
 
 [source,sql]
 ----
@@ -296,7 +299,10 @@ SELECT
 FROM USER_LOSSES GROUP BY `user`,game_name;
 ----
 
+
 image::insert-into-losses-per-user.png[]
+
+
 
 * Create the STATS_PER_USER Table
 
@@ -315,7 +321,10 @@ CREATE TABLE STATS_PER_USER (
 );
 ----
 
+
 image::create-table-stats-per-user.png[]
+
+
 
 [source,sql]
 ----
@@ -338,9 +347,13 @@ GROUP BY
     UG.`user`, UG.game_name;
 ----
 
+
+
 image::insert-into-stats-per-user.png[]
 
+
 Now if you click "Flink statements", you will find 2 Flink statements are currently running:
+
 
 image::flink-running-statements.png[]
 
