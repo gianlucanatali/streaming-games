@@ -18,7 +18,7 @@ To implement streaming analytics in the game we built a scoreboard using Flink. 
 * *AWS account* - This demo/Workshop runs on AWS
 
 == Workshop or Demo?
-Choose your story! If you prefer to follow the different steps in a workshop style follow the instructions https://gianlucanatali.github.io/streaming-games/index.html[here]. Otherwise for a more traditional demo keep reading below!
+Choose your story! If you prefer to follow the different steps in a workshop style follow the instructions https://github.com/lyuen-confluent/streaming-games/blob/main/adocs/2048-workshop.adoc[here]. Otherwise for a more traditional demo keep reading below!
 
 
 == Pre-requisites
