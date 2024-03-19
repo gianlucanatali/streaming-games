@@ -236,7 +236,6 @@ resource "aws_ssm_parameter" "origin_allowed" {
   name  = "${local.ssm_parameter_name}" 
   type  = "String"
   value = "https://${aws_cloudfront_distribution.games.domain_name}"
-  overwrite = true
 }
 
 resource "aws_lambda_function" "event_handler_function" {

@@ -2,7 +2,7 @@ terraform {
   required_providers {
     confluent = {
       source  = "confluentinc/confluent"
-      version = "1.62.0"
+      version = "1.67.1"
     }
   }
 }
@@ -559,9 +559,9 @@ resource "confluent_api_key" "env-manager-flink-api-key" {
   }
 
   managed_resource {
-    id          = "aws.${var.aws_region}"
-    api_version = "fcpm/v2"
-    kind        = "Region"
+    id          = data.confluent_flink_region.cc-flink-region.id
+    api_version = data.confluent_flink_region.cc-flink-region.api_version
+    kind        = data.confluent_flink_region.cc-flink-region.kind
 
     environment {
       id = confluent_environment.staging.id

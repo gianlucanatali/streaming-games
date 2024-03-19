@@ -11,7 +11,7 @@ source config/demo.cfg
 # Confluent Cloud ksqlDB application
 #################################################################
 echo -e "\nConfluent Cloud ksqlDB application endpoint $KSQLDB_ENDPOINT\n"
-echo -e "\nRun as workshop et to $run_as_workshop\n"
+echo -e "\nRun as workshop set to $run_as_workshop\n"
 
 #ccloud::validate_ksqldb_up "$KSQLDB_ENDPOINT" || exit 1
 
