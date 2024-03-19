@@ -8,6 +8,7 @@ resource "confluent_flink_statement" "create_losses_per_user" {
     resource.confluent_schema_registry_cluster.essentials,
     resource.confluent_kafka_cluster.games-demo,
     resource.confluent_flink_compute_pool.cc_flink_compute_pool,
+    resource.confluent_kafka_topic.user_losses,
     resource.confluent_schema.avro-user-losses
   ]
   organization {
