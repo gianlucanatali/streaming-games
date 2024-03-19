@@ -99,7 +99,7 @@ cp config/demo.cfg.example config/demo.cfg
 export TF_VAR_aws_profile="<AWS_PROFILE>"
 export TF_VAR_aws_region="eu-west-2"
 export TF_VAR_schema_registry_region="eu-central-1"
-export TF_VAR_confluent_cloud_api_key=="<CONFLUENT_CLOUD_API_KEY>"
+export TF_VAR_confluent_cloud_api_key="<CONFLUENT_CLOUD_API_KEY>"
 export TF_VAR_confluent_cloud_api_secret="<CONFLUENT_CLOUD_API_SECRET>"
 ----
 we advice using the utility https://github.com/Nike-Inc/gimme-aws-creds[gimme-aws-creds] if you use Okta to login in AWS. You can also use the https://granted.dev/[granted] CLI for AWS creds. 
