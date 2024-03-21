@@ -108,12 +108,12 @@ GameManager.prototype.actuate = function () {
   }
 
   // Clear the state when the game is over (game over only, not win)
+  produceToUserGame(this.storageManager.getUsername(),this.storageManager.getGameName(), this.score, 1, 1);
   if (this.over) {
     produceToUserLosses(this.storageManager.getUsername(),this.storageManager.getGameName());
     this.storageManager.clearGameState();  
   } else {
     this.storageManager.setGameState(this.serialize());
-    produceToUserGame(this.storageManager.getUsername(),this.storageManager.getGameName(), this.score, 1, 1);
   }
 
   this.actuator.actuate(this.grid, {

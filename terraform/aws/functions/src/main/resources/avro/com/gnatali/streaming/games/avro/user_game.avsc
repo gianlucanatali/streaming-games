@@ -1,0 +1,47 @@
+{
+  "fields": [
+    {
+      "default": null,
+      "name": "user",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "default": null,
+      "name": "game_name",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "default": null,
+      "name": "score",
+      "type": [
+        "null",
+        "int"
+      ]
+    },
+    {
+      "default": null,
+      "name": "lives",
+      "type": [
+        "null",
+        "int"
+      ]
+    },
+    {
+      "default": null,
+      "name": "level",
+      "type": [
+        "null",
+        "int"
+      ]
+    }
+  ],
+  "name": "UserGame",
+  "namespace": "com.gnatali.streaming.games.avro",
+  "type": "record"
+}

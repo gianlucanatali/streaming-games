@@ -21,8 +21,6 @@ function init_vars_from_tf_output() {
     KSQLDB_CLUSTER_API_KEY=$(terraform output -json -state=${STATE_FILE_PATH} | jq ".confluent_ksql_cluster_api_key.value" -r)
     KSQLDB_CLUSTER_API_SECRET=$(terraform output -json -state=${STATE_FILE_PATH} | jq ".confluent_ksql_cluster_api_secret.value" -r)
     GAMES_URL=$(terraform output -json -state=${STATE_FILE_PATH} | jq ".Games.value" -r)
-    
-
 }
 
 function create_infra_with_tf (){
@@ -31,6 +29,8 @@ function create_infra_with_tf (){
     # source $DELTA_CONFIGS_DIR/env.delta
     
     # create_tfvars_file
+
+    export TF_VAR_run_as_workshop=$run_as_workshop
     cd $TFS_PATH
     terraform init
     terraform apply --auto-approve
@@ -110,7 +110,7 @@ function start_demo {
     create_infra_with_tf
 
     init_vars_from_tf_output
-
+    
     KSQLDB_ALREADY_RUN_FILE="${LOGS_FOLDER}/ksqldb-already-run.log"
     if test -f "$KSQLDB_ALREADY_RUN_FILE"; then
         echo "KsqlDB was already executed for this workshop, we'll skip it for additional run of the start.sh . Destroy first"

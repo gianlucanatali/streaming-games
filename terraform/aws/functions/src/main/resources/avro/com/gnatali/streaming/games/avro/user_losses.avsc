@@ -1,0 +1,23 @@
+{
+  "fields": [
+    {
+      "default": null,
+      "name": "user",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "default": null,
+      "name": "game_name",
+      "type": [
+        "null",
+        "string"
+      ]
+    }
+  ],
+  "name": "UserLosses",
+  "namespace": "com.gnatali.streaming.games.avro",
+  "type": "record"
+}

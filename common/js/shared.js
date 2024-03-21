@@ -1,21 +1,28 @@
 
 function produceToUserGame(user,gameName, score, lives, level) {
 
-	var topic = "USER_GAME"
-	var ksqlQuery =`INSERT INTO ${topic} (USER_KEY, GAME) VALUES ( STRUCT(USER:='${user}', GAME_NAME:='${gameName}'), STRUCT(SCORE:=${score},LIVES:=${lives},LEVEL:=${level}));`
+	var payload = {}
+	payload.topic = "USER_GAME"
+	payload.user= user
+	payload.game_name = gameName
+	payload.score = score
+	payload.lives = lives
+	payload.level = level
 
 	const request = new XMLHttpRequest();
-	sendksqlDBStmt(request, ksqlQuery);
+	sendToKafka(request, payload);
 
 }
 
 function produceToUserLosses(user,gameName) {
 
-	var topic = "USER_LOSSES"
-	var ksqlQuery =`INSERT INTO ${topic} (USER_KEY) VALUES ( STRUCT(USER:='${user}', GAME_NAME:='${gameName}') );`
+	var payload = {}
+	payload.topic = "USER_LOSSES"
+	payload.user= user
+	payload.game_name = gameName
 
 	const request = new XMLHttpRequest();
-	sendksqlDBStmt(request, ksqlQuery);
+	sendToKafka(request, payload);
 
 }
 
@@ -24,7 +31,7 @@ function loadHighestScore(gameName, user, ctx, callback ) {
 
 	var highestScore ;
 	
-	ksqlQuery = `select  HIGHEST_SCORE from STATS_PER_USER WHERE USER_KEY=STRUCT(USER:='${user}', GAME_NAME:='${gameName}');`;
+	ksqlQuery = `SELECT HIGHEST_SCORE FROM STATS_PER_USER WHERE ROWKEY->USER='${user}' AND ROWKEY->GAME_NAME='${gameName}';`;
 
 	var request = new XMLHttpRequest();
     request.onreadystatechange = function() {
@@ -46,9 +53,7 @@ function loadHighestScore(gameName, user, ctx, callback ) {
 
 function getScoreboardJson(gameName,callback) {
 
-	//var userListCsv = userList.map(user_key => `STRUCT(USER:='${user_key.USER}',GAME_NAME:='${user_key.GAME_NAME}')`).join(',');
-
-	ksqlQuery = `select USER_KEY->USER, HIGHEST_SCORE, HIGHEST_LEVEL, TOTAL_LOSSES from STATS_PER_USER WHERE GAME_NAME='${gameName}';`;
+	ksqlQuery = `SELECT ROWKEY->USER, HIGHEST_SCORE, HIGHEST_LEVEL, TOTAL_LOSSES FROM STATS_PER_USER WHERE ROWKEY->GAME_NAME='${gameName}';`;
 
 	const request = new XMLHttpRequest();
 	request.onreadystatechange = function() {
@@ -107,4 +112,10 @@ function sendksqlDBQuery(request, ksqlQuery){
 	request.send(JSON.stringify(query));
 }
 
-
+function sendToKafka(request, payload){
+	payload.endpoint = "kafka";
+	request.open('POST', KSQLDB_QUERY_API, true);
+	request.setRequestHeader('Accept', 'application/json');
+	request.setRequestHeader('Content-Type', 'application/json');
+	request.send(JSON.stringify(payload));
+}

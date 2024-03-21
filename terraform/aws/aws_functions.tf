@@ -236,7 +236,6 @@ resource "aws_ssm_parameter" "origin_allowed" {
   name  = "${local.ssm_parameter_name}" 
   type  = "String"
   value = "https://${aws_cloudfront_distribution.games.domain_name}"
-  overwrite = true
 }
 
 resource "aws_lambda_function" "event_handler_function" {
@@ -251,13 +250,19 @@ resource "aws_lambda_function" "event_handler_function" {
   handler = "com.gnatali.streaming.games.EventHandler"
   role = aws_iam_role.event_handler_role.arn
   runtime = "java11"
-  memory_size = 256
+  memory_size = 512
   timeout = 60
   environment {
     variables = {
       ORIGIN_ALLOWED_SSM_PARAM = local.ssm_parameter_name
       KSQLDB_ENDPOINT = confluent_ksql_cluster.main.rest_endpoint
       KSQLDB_API_AUTH_INFO = local.ksql_basic_auth_user_info
+      BOOTSTRAP_SERVER = confluent_kafka_cluster.games-demo.bootstrap_endpoint
+      KAFKA_API_KEY = confluent_api_key.app-manager-kafka-api-key.id
+      KAFKA_API_SECRET = confluent_api_key.app-manager-kafka-api-key.secret
+      SR_ENDPOINT = confluent_schema_registry_cluster.essentials.rest_endpoint
+      SR_API_KEY = confluent_api_key.sr_cluster_key.id
+      SR_API_SECRET = confluent_api_key.sr_cluster_key.secret
     }
   }
 }

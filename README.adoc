@@ -2,11 +2,11 @@
 :imagesdir: adocs/images/
 
 
-*Streaming Games* is the funniest application that you ever see while applying principles of streaming analytics using https://confluent.cloud[Confluent Cloud]. Built around the different games, this application ingest and store events from the game into Kafka topics and allow you to process them in near real-time using https://ksqldb.io/[ksqlDB]. In order to keep you focused this application is based on fully managed services in Confluent Cloud for both the Apache Kafka cluster (using Confluent Cloud KORA engine) as well as ksqlDB.
+*Streaming Games* is the funniest application that you ever see while applying principles of streaming analytics using https://confluent.cloud[Confluent Cloud]. Built around the different games, this application ingest and store events from the game into Kafka topics and allow you to process them in near real-time using https://www.confluent.io/product/flink/[Apache Flink]. In order to keep you focused this application is based on fully managed services in Confluent Cloud for both the Apache Kafka cluster (using Confluent Cloud KORA engine) as well as Flink.
 
 image::2048.jpg[2048,300,386]
 
-To implement streaming analytics in the game we built a  link:statements.sql[scoreboard using ksqlDB]. The scoreboard will be a table containing aggregated metrics of the players such as their highest score, the highest level achieved, and the number of times that the player loses. As new events arrive the scoreboard gets instantly updated by the continuous queries that keep processing those events as they happen.
+To implement streaming analytics in the game we built a scoreboard using Flink. The scoreboard will be a table containing aggregated metrics of the players such as their highest score, the highest level achieved, and the number of times that the player loses. As new events arrive the scoreboard gets instantly updated by the continuous queries that keep processing those events as they happen.
 
 == What you are going to need?
 
@@ -18,7 +18,7 @@ To implement streaming analytics in the game we built a  link:statements.sql[sco
 * *AWS account* - This demo/Workshop runs on AWS
 
 == Workshop or Demo?
-Choose your story! If you prefer to follow the different steps in a workshop style follow the instructions https://gianlucanatali.github.io/streaming-games/index.html[here]. Otherwise for a more traditional demo keep reading below!
+Choose your story! If you prefer to follow the different steps in a workshop style follow the instructions https://github.com/lyuen-confluent/streaming-games/blob/main/adocs/2048-workshop.adoc[here]. Otherwise for a more traditional demo keep reading below!
 
 
 == Pre-requisites
@@ -73,12 +73,13 @@ First things first, clone this github repo to your local machine (Use your Termi
 
 [source,bash]
 ----
-git clone https://github.com/gianlucanatali/streaming-games.git
+git clone https://github.com/lyuen-confluent/streaming-games.git
 ----
 
 == Step 4. Configure the deployment
 
 The whole workshop creation is scripted. The script will leverage Terraform to:
+
 * As mentioned before the application uses a Kafka cluster running in a fully managed service for Apache Kafka. Therefore the first thing it will provision is Confluent Cloud resources using the Confluent Cloud CLI. If you are interested in how you can create a cluster in Confluent Cloud via the Web UI have a look at our https://docs.confluent.io/current/quickstart/cloud-quickstart/index.html[Quick Start for Apache Kafka using Confluent Cloud].
 * Spin up the other resources needed in AWS
 
@@ -98,7 +99,7 @@ cp config/demo.cfg.example config/demo.cfg
 export TF_VAR_aws_profile="<AWS_PROFILE>"
 export TF_VAR_aws_region="eu-west-2"
 export TF_VAR_schema_registry_region="eu-central-1"
-export TF_VAR_confluent_cloud_api_key=="<CONFLUENT_CLOUD_API_KEY>"
+export TF_VAR_confluent_cloud_api_key="<CONFLUENT_CLOUD_API_KEY>"
 export TF_VAR_confluent_cloud_api_secret="<CONFLUENT_CLOUD_API_SECRET>"
 ----
 we advice using the utility https://github.com/Nike-Inc/gimme-aws-creds[gimme-aws-creds] if you use Okta to login in AWS. You can also use the https://granted.dev/[granted] CLI for AWS creds. 
@@ -117,11 +118,11 @@ You can set ``TF_VAR_aws_profile="default"`` in the ``demo.cfg`` file
 
 == Step 5. Deploying the application
 
-The application is essentially a set of link:https://github.com/gianlucanatali/demo-scene/tree/master/streaming-games/games/2048[HTML/CSS/JS files] that forms a microsite that can be hosted statically anywhere. But for the sake of coolness we will deploy this microsite in a S3 bucket from AWS. This bucket will be created in the same region selected for the Confluent Cloud cluster to ensure that the application will be co-located. The application will emit events that will be processed by a event handler implemented as an API Gateway which uses a Lambda function as backend. This event handler API receives the events and writes them into Kafka using ksqlDB.
+The application is essentially a set of link:https://github.com/gianlucanatali/demo-scene/tree/master/streaming-games/games/2048[HTML/CSS/JS files] that forms a microsite that can be hosted statically anywhere. But for the sake of coolness we will deploy this microsite in a S3 bucket from AWS. This bucket will be created in the same region selected for the Confluent Cloud cluster to ensure that the application will be co-located. The application will emit events that will be processed by a event handler implemented as an API Gateway which uses a Lambda function as backend. This event handler API receives the events and writes them into Kafka.
 
-image::arch.png[align="left"]
+image::arch-flink.png[align="left"]
 
-Please note that during deployment, the script takes care of creating the required Kafka topics and also the ksqlDB queries. Therefore, there is no need to manually create them.
+Please note that during deployment, the script takes care of creating the required Kafka topics, Flink statements and the materialized view using ksqlDB. Therefore, there is no need to manually create them.
 
 1. Start the demo creation
 +
@@ -153,13 +154,13 @@ You can try to speed up this process using the trick explained in this medium ar
 === Check the scoreboard
 
 First things first: Play with the game and share your game link with your friends to populate data! 
-You can make sure the data is flowing into the Confluent followinf the steps below: 
+You can make sure the data is flowing into the Confluent by following the steps below: 
 
 1. In Confluent UI go to the environment and the cluster within it, created by the terraform script - should start with with ``streaming-games`` 
 
 2. Click on *Topics* and choose ``USER_GAME`` topic 
 
-image::topicui.png[]
+image::topic-user-game.png[]
 
 As users engage with the 2048 game, two types of events will be generated. The first is referred to as the "User Game" event and includes information about the user's current game state, such as their score, level, and remaining lives. This event will be triggered every time the user's score changes, advances to a new level, or loses a life.
 
@@ -168,9 +169,85 @@ The scoreboard can be visualized in real time by clicking on the *SCOREBOARD* li
 
 image::scoreboard.png[]
 
-To build a scoreboard out of this, we created a streaming analytics pipeline that transform these raw events into a table with the scoreboard that is updated in near real-time.
+To build a scoreboard out of this, we created a real-time streaming analytics pipeline that transform these raw events into into a table with the scoreboard that is updated in near real-time.
 
-image::pipeline.png[]
+=== the Flink statements that built this streaming pipeline
+
+To implement the pipeline we used Flink. You can see below the queries for your reference.
+
+=== LOSSES_PER_USER Table 
+A table to count the number of losses for each player.
+
+[source,sql]
+----
+CREATE TABLE LOSSES_PER_USER (
+    `USER` STRING,
+    `GAME_NAME` STRING,
+    `TOTAL_LOSSES` INT,
+    PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
+) WITH (
+    'kafka.partitions' = '1'
+);
+
+INSERT INTO LOSSES_PER_USER
+SELECT 
+    `user`,
+    game_name,
+    cast(count(game_name) as int) as total_losses 
+FROM USER_LOSSES GROUP BY `user`,game_name;
+----
+
+=== STATS_PER_USER Table
+A table that joins USER_GAME with LOSSES_PER_USER
+
+[source,sql]
+----
+CREATE TABLE STATS_PER_USER (
+    `USER` STRING,
+    `GAME_NAME` STRING,
+    `HIGHEST_SCORE` INT,
+    `HIGHEST_LEVEL` INT,
+    `TOTAL_LOSSES` INT,
+    PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
+) WITH (
+    'kafka.partitions' = '1',
+    'kafka.cleanup-policy' = 'delete-compact' 
+);
+
+INSERT INTO STATS_PER_USER
+SELECT
+    UG.`user` AS `USER`,
+    UG.game_name AS GAME_NAME,
+    MAX(UG.score) AS HIGHEST_SCORE,
+    MAX(UG.level) AS HIGHEST_LEVEL,
+    MAX (
+        CASE 
+            WHEN LPU.TOTAL_LOSSES IS NULL THEN CAST (0 AS INT)
+            ELSE LPU.TOTAL_LOSSES
+        END
+    ) AS TOTAL_LOSSES
+FROM
+    USER_GAME UG
+    LEFT JOIN LOSSES_PER_USER LPU ON UG.`user` = LPU.`USER` AND UG.game_name = LPU.GAME_NAME
+GROUP BY 
+    UG.`user`, UG.game_name;
+----
+
+You can check the status of the running Flink Statements by clicking "Flink (preview)" and then "Flink statements" in your Confluent Cloud environment:
+
+image::flink-running-statements.png[]
+
+Finally, we use ksqlDB to materialize the STATS_PER_USER table created by Flink with a source table:
+
+[source,sql]
+----
+CREATE SOURCE TABLE STATS_PER_USER 
+WITH ( 
+    KAFKA_TOPIC = 'STATS_PER_USER',
+    FORMAT = 'AVRO');
+----
+
+image::arch-flink-ksqldb.png[]
 
 ksqlDB supports link:https://docs.ksqldb.io/en/0.14.0-ksqldb/concepts/queries/pull/[Pull queries], where you can get the results for a query in a more traditional fashion (instead of Push queries).
 
@@ -178,62 +255,18 @@ A query to the STATS_PER_USER table is sent to ksqlDB, to get all the players sc
 
 [source,sql]
 ----
-SELECT 
-  USER_KEY->USER,
+SELECT
+  ROWKEY->USER,
   HIGHEST_SCORE,
   HIGHEST_LEVEL,
   TOTAL_LOSSES
-FROM STATS_PER_USER
-WHERE GAME_NAME='2048';
+FROM STATS_PER_USER 
+WHERE ROWKEY->GAME_NAME='2048';
 ----
-
-=== the ksqlDB queries that built this streaming pipeline
-
-To implement the pipeline we used ksqlDB. You can see below the queries for your reference.
-
-=== LOSSES_PER_USER Table 
-A table to count the number of losses for each player.
-
-[source,sql]
-----
-CREATE TABLE LOSSES_PER_USER AS 
-SELECT 
-  USER_KEY, 
-  USER_KEY -> USER AS USER, 
-  USER_KEY -> GAME_NAME AS GAME_NAME, 
-  COUNT(USER_KEY) AS TOTAL_LOSSES 
-FROM 
-  USER_LOSSES 
-GROUP BY 
-  USER_KEY;
-----
-
-=== Create the STATS_PER_USER Table 
-
-[source,sql]
-----
-CREATE TABLE STATS_PER_USER AS 
-SELECT 
-  UG.USER_KEY AS USER_KEY, 
-  UG.USER_KEY -> USER AS USER, 
-  UG.USER_KEY -> GAME_NAME AS GAME_NAME, 
-  MAX(UG.GAME -> SCORE) AS HIGHEST_SCORE, 
-  MAX(UG.GAME -> LEVEL) AS HIGHEST_LEVEL, 
-  MAX(
-    CASE WHEN LPU.TOTAL_LOSSES IS NULL THEN CAST(0 AS BIGINT) ELSE LPU.TOTAL_LOSSES END
-  ) AS TOTAL_LOSSES 
-FROM 
-  USER_GAME UG 
-  LEFT JOIN LOSSES_PER_USER LPU ON UG.USER_KEY = LPU.USER_KEY 
-GROUP BY 
-  UG.USER_KEY;
-----
-
-
 
 == Step 7. Destroy the resources (save money!)
 
-The great thing about Cloud resources is that you can spin the up and down with few commands. Once you are finished with this worksho/demo , remember to destroy the resources you created today, to avoid incuring in charges if you are not planning to use this. You can always spin it up again anytime you want (uncomment the run_as_workshop variable in the config file if you want to automate the creation of ksqlDB queries, so you can demo the app without any manual effort)! 
+The great thing about Cloud resources is that you can spin the up and down with few commands. Once you are finished with this worksho/demo , remember to destroy the resources you created today, to avoid incuring in charges if you are not planning to use this. You can always spin it up again anytime you want (uncomment the run_as_workshop variable in the config file if you want to automate the creation of Flink statements and ksqlDB queries, so you can demo the app without any manual effort)! 
 
 
 *Note:* When you are done with the application, you can automatically destroy all the resources created using the command below:

@@ -11,7 +11,7 @@ source config/demo.cfg
 # Confluent Cloud ksqlDB application
 #################################################################
 echo -e "\nConfluent Cloud ksqlDB application endpoint $KSQLDB_ENDPOINT\n"
-echo -e "\nRun as workshop et to $run_as_workshop\n"
+echo -e "\nRun as workshop set to $run_as_workshop\n"
 
 #ccloud::validate_ksqldb_up "$KSQLDB_ENDPOINT" || exit 1
 
@@ -42,8 +42,6 @@ done <$1
 echo -e "\nSleeping 20 seconds after submitting KSQL queries\n"
 sleep 20
 }
-
-submit_ksqldb_queries ksqldb/statements-core.sql
 
 if [ "$run_as_workshop" == "true" ]; then
     echo "Running as workshop, additional ksqlDB queries will not be run"

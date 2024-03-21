@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.18">
+<meta name="generator" content="Asciidoctor 2.0.20">
 <title>9 Steps to Build a Real-Time Scoreboard With Confluent Cloud</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
@@ -897,7 +897,7 @@ ol > li p, ul > li p, ul dd, ol dd, .olist .olist, .ulist .olist, .olist .ulist 
 <div class="sectionbody">
 <div class="paragraph">
 <p><strong>Streaming Games</strong> is a fun, simple application that ingests and stores event data from online games into Apache Kafka® topics.
-Once stored in Kafka topics, game data can be processed in flight using  <a href="https://ksqldb.io/">ksqlDB</a> to create a scoreboard that updates in near-real time.
+Once stored in Kafka topics, game data can be processed in flight using <a href="https://www.confluent.io/product/flink/">Apache Flink</a> to create a scoreboard that updates in near-real time.
 In this self-paced workshop, you’ll learn how to apply the principles of streaming analytics to create your own scoreboard around the game 2048.</p>
 </div>
 <div class="imageblock">
@@ -925,7 +925,7 @@ In this self-paced workshop, you’ll learn how to apply the principles of strea
 <p>The scoreboard will continuously update as queries process new events as they occur.</p>
 </div>
 <div class="paragraph">
-<p>To keep things simple, you’ll be using <a href="https://confluent.cloud">Confluent Cloud</a>. Powered by the cloud-native <a href="https://www.confluent.io/blog/cloud-native-data-streaming-kafka-engine/">Kora engine</a>, this fully managed Kafka service will make it easy for you to leverage both the Kafka cluster and ksqlDB powering your streaming scoreboard.</p>
+<p>To keep things simple, you’ll be using <a href="https://confluent.cloud">Confluent Cloud</a>. Powered by the cloud-native <a href="https://www.confluent.io/blog/cloud-native-data-streaming-kafka-engine/">Kora engine</a>, this fully managed Kafka service will make it easy for you to leverage both the Kafka cluster, Flink and ksqlDB powering your streaming scoreboard.</p>
 </div>
 </div>
 </div>
@@ -938,7 +938,7 @@ In this self-paced workshop, you’ll learn how to apply the principles of strea
 <p><strong>Java, Maven, and Terraform</strong> - The UI layer of the application relies on two APIs that are implemented using Java. You will need to have Java 11+ installed to build the source-code. The build itself is implemented using Maven, and it is triggered automatically by Terraform. You will need to have Terraform 0.14+ installed locally using your cloud provider credentials so <a href="https://www.terraform.io">Terraform</a> can create and manage the resources for you.</p>
 </li>
 <li>
-<p><strong>Confluent Cloud CLI</strong> - During the demo setup, a bash script will set up the whole Confluent Cloud environment for you. To do that it will need to have the Confluent Cloud CLI installed locally. You can find instructions about how to install it <a href="https://docs.confluent.io/current/cloud/cli/index.html">here</a>. v1.7.0 or later is required, logged in with the <code>--save</code> argument which saves your Confluent Cloud user login credentials or refresh token (in the case of SSO) to the local <code>netrc</code> file.</p>
+<p><strong>Confluent Cloud CLI</strong> - During the demo setup, a bash script will set up the whole Confluent Cloud environment for you. To do that it will need to have the Confluent Cloud CLI installed locally. You can find instructions about how to install it <a href="https://docs.confluent.io/current/cloud/cli/index.html">here</a>. v3.0.0 or later is required, logged in with the <code>--save</code> argument which saves your Confluent Cloud user login credentials or refresh token (in the case of SSO) to the local <code>netrc</code> file.</p>
 </li>
 <li>
 <p><strong>AWS and Confluent Cloud accounts</strong> - This workshop runs on AWS and uses Confluent Cloud to manage the Kafka cluster and ksqlBD. If you do not have a Confluent Cloud account, you can create it with instructions below.</p>
@@ -1033,7 +1033,7 @@ If you want you can create a Confluent Cloud account also from  <a href="https:/
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">git clone https://github.com/gianlucanatali/streaming-games.git
+<pre class="highlight"><code class="language-bash" data-lang="bash">git clone https://github.com/lyuen-confluent/streaming-games.git
 cd streaming-games</code></pre>
 </div>
 </div>
@@ -1177,11 +1177,11 @@ export run_as_workshop="true"</code></pre>
 <p>This bucket will be created in the same region selected for the Confluent Cloud cluster to ensure that the application will be co-located.</p>
 </div>
 <div class="paragraph">
-<p>The application will emit events that will be processed by an event handler implemented as an API Gateway using a Lambda function on the backend. This event handler API receives the events and writes them into Kafka using ksqlDB.</p>
+<p>The application will emit events that will be processed by an event handler implemented as an API Gateway using a Lambda function on the backend. This event handler API receives the events and writes them into topics using native Kafka API.</p>
 </div>
 <div class="imageblock text-left">
 <div class="content">
-<img src="images/arch.png" alt="arch">
+<img src="images/arch-flink.png" alt="arch flink">
 </div>
 </div>
 <div class="ulist">
@@ -1259,7 +1259,7 @@ Game = https://d************.cloudfront.net/</code></pre>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>You will not be able to use this feature until you create the ksqlDB queries that populate the scoreboard.</p>
+<p>You will not be able to use this feature until you create the Flink queries and ksqlDB source table that populate the scoreboard.</p>
 </div>
 </td>
 </tr>
@@ -1271,7 +1271,7 @@ Game = https://d************.cloudfront.net/</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Before you run your first ksqlDB queries, make sure the data is flowing into Confluent Cloud:</p>
+<p>Before you run your first Flink queries, make sure the data is flowing into Confluent Cloud:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1298,21 +1298,149 @@ Game = https://d************.cloudfront.net/</code></pre>
 <p>The second type of event is called the "User Losses" event which, as the name suggests, captures data related to the user’s loss in the game. This event is triggered when the player reaches the game-over state.</p>
 </div>
 <div class="paragraph">
-<p>A streaming analytics pipeline will be created to transform these raw events into a table with the scoreboard that is updated in near real-time.</p>
+<p>A streaming analytics pipeline will be created using Flink to transform these raw events into a table with the scoreboard that is updated in near real-time.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="images/pipeline.png" alt="pipeline">
+<img src="images/arch-flink-flink.png" alt="arch flink flink">
 </div>
 </div>
 <div class="paragraph">
-<p>Now that you know that the data is flowing into Confluent, you can create the ksqlDB queries that populate the scoreboard.</p>
+<p>The STATS_PER_USER table created by Flink is backed by a Kafka topic, this is a changelog topic that contains all updates to the scoreboard.</p>
+</div>
+<div class="paragraph">
+<p>We then use a feature called <a href="https://docs.ksqldb.io/en/latest/developer-guide/ksqldb-reference/create-table/#source-tables">Source Table</a> in ksqlDB to materialize this changelog topic into a state store that allows the lambda function to issue pull query to power the scoreboard.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arch-flink-ksqldb.png" alt="arch flink ksqldb">
+</div>
+</div>
+<div class="paragraph">
+<p>Now that you know how the data is flowing into Confluent and being processed by Flink and ksqlDB, you can create the Flink and ksqlDB queries that populate the scoreboard.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_step_7_run_the_ksqldb_queries">Step 7. Run the ksqlDB queries</h3>
+<h3 id="_step_7_create_the_flink_statements">step 7. Create the Flink statements</h3>
 <div class="paragraph">
-<p>To implement the streaming analytics pipeline, you’ll need to use ksqlDB.</p>
+<p>To implement the streaming analytics pipeline, you’ll need to use Flink.</p>
+</div>
+<div class="paragraph">
+<p>Open the SQL workspace for Flink by clicking the button "Open SQL worksapce" in your Flink compute pool.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/flink-compute-pool.png" alt="flink compute pool">
+</div>
+</div>
+<div class="paragraph">
+<p>Create the following statements in your SQL workspace.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Create the LOSSES_PER_USER table to count the number of losses for each player.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sql" data-lang="sql">CREATE TABLE LOSSES_PER_USER (
+    `USER` STRING,
+    `GAME_NAME` STRING,
+    `TOTAL_LOSSES` INT,
+    PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
+) WITH (
+    'kafka.partitions' = '1'
+);</code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/create-table-losses-per-user.png" alt="create table losses per user">
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sql" data-lang="sql">INSERT INTO LOSSES_PER_USER
+SELECT
+    `user`,
+    game_name,
+    cast(count(game_name) as int) as total_losses
+FROM USER_LOSSES GROUP BY `user`,game_name;</code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/insert-into-losses-per-user.png" alt="insert into losses per user">
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Create the STATS_PER_USER Table</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sql" data-lang="sql">CREATE TABLE STATS_PER_USER (
+    `USER` STRING,
+    `GAME_NAME` STRING,
+    `HIGHEST_SCORE` INT,
+    `HIGHEST_LEVEL` INT,
+    `TOTAL_LOSSES` INT,
+    PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
+) WITH (
+    'kafka.partitions' = '1',
+    'kafka.cleanup-policy' = 'delete-compact'
+);</code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/create-table-stats-per-user.png" alt="create table stats per user">
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sql" data-lang="sql">INSERT INTO STATS_PER_USER
+SELECT
+    UG.`user` AS `USER`,
+    UG.game_name AS GAME_NAME,
+    MAX(UG.score) AS HIGHEST_SCORE,
+    MAX(UG.level) AS HIGHEST_LEVEL,
+    MAX (
+        CASE
+            WHEN LPU.TOTAL_LOSSES IS NULL THEN CAST (0 AS INT)
+            ELSE LPU.TOTAL_LOSSES
+        END
+    ) AS TOTAL_LOSSES
+FROM
+    USER_GAME UG
+    LEFT JOIN LOSSES_PER_USER LPU ON UG.`user` = LPU.`USER` AND UG.game_name = LPU.GAME_NAME
+GROUP BY
+    UG.`user`, UG.game_name;</code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/insert-into-stats-per-user.png" alt="insert into stats per user">
+</div>
+</div>
+<div class="paragraph">
+<p>Now if you click "Flink statements", you will find 2 Flink statements are currently running:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/flink-running-statements.png" alt="flink running statements">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_8_run_the_ksqldb_queries">Step 8. Run the ksqlDB queries</h3>
+<div class="paragraph">
+<p>To create a materialized view of the STATS_PER_USER table created by Flink, you’ll need to use ksqlDB.</p>
 </div>
 <div class="paragraph">
 <p>Run the following queries in your ksqlDB instance in Confluent Cloud.</p>
@@ -1332,48 +1460,18 @@ Game = https://d************.cloudfront.net/</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>Create the LOSSES_PER_USER table to count the number of losses for each player.</p>
+<p>Create the STATS_PER_USER Source Table</p>
 </li>
 </ul>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sql" data-lang="sql">CREATE TABLE LOSSES_PER_USER AS
-SELECT
-  USER_KEY,
-  USER_KEY -&gt; USER AS USER,
-  USER_KEY -&gt; GAME_NAME AS GAME_NAME,
-  COUNT(USER_KEY) AS TOTAL_LOSSES
-FROM
-  USER_LOSSES
-GROUP BY
-  USER_KEY;</code></pre>
+<pre class="highlight"><code class="language-sql" data-lang="sql">CREATE SOURCE TABLE STATS_PER_USER WITH ( KAFKA_TOPIC = 'STATS_PER_USER', FORMAT = 'AVRO');</code></pre>
 </div>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>Create the STATS_PER_USER Table</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
+<div class="imageblock">
 <div class="content">
-<pre class="highlight"><code class="language-sql" data-lang="sql">CREATE TABLE STATS_PER_USER AS
-SELECT
-  UG.USER_KEY AS USER_KEY,
-  UG.USER_KEY -&gt; USER AS USER,
-  UG.USER_KEY -&gt; GAME_NAME AS GAME_NAME,
-  MAX(UG.GAME -&gt; SCORE) AS HIGHEST_SCORE,
-  MAX(UG.GAME -&gt; LEVEL) AS HIGHEST_LEVEL,
-  MAX(
-    CASE WHEN LPU.TOTAL_LOSSES IS NULL THEN CAST(0 AS BIGINT) ELSE LPU.TOTAL_LOSSES END
-  ) AS TOTAL_LOSSES
-FROM
-  USER_GAME UG
-  LEFT JOIN LOSSES_PER_USER LPU ON UG.USER_KEY = LPU.USER_KEY
-GROUP BY
-  UG.USER_KEY;</code></pre>
+<img src="images/create-source-table-ksqldb.png" alt="create source table ksqldb">
 </div>
 </div>
 <div class="ulist">
@@ -1399,17 +1497,18 @@ GROUP BY
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-sql" data-lang="sql">SELECT
-  USER_KEY-&gt;USER,
+  ROWKEY-&gt;USER,
   HIGHEST_SCORE,
   HIGHEST_LEVEL,
   TOTAL_LOSSES
 FROM STATS_PER_USER
-WHERE GAME_NAME='2048';</code></pre>
+WHERE ROWKEY-&gt;GAME_NAME='2048';</code></pre>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_destroy_your_resources_step_9">Destroy your resources (Step 9)</h4>
+</div>
+<div class="sect2">
+<h3 id="_destroy_your_resources_step_9">Destroy your resources (Step 9)</h3>
 <div class="paragraph">
 <p>(&#8230;&#8203;and save money!)</p>
 </div>
@@ -1440,7 +1539,6 @@ WHERE GAME_NAME='2048';</code></pre>
 </div>
 <div class="paragraph">
 <p>You can always spin these resources back up any time you want. Simply uncomment the run_as_workshop variable in the config file to automate the creation of ksqlDB queries and you can demo the app again without any manual effort!</p>
-</div>
 </div>
 </div>
 </div>
