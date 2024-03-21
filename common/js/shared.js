@@ -1,14 +1,4 @@
 
-// function produceToUserGame(user,gameName, score, lives, level) {
-
-// 	var topic = "USER_GAME"
-// 	var ksqlQuery =`INSERT INTO ${topic} (USER_KEY, GAME) VALUES ( STRUCT(USER:='${user}', GAME_NAME:='${gameName}'), STRUCT(SCORE:=${score},LIVES:=${lives},LEVEL:=${level}));`
-
-// 	const request = new XMLHttpRequest();
-// 	sendksqlDBStmt(request, ksqlQuery);
-
-// }
-
 function produceToUserGame(user,gameName, score, lives, level) {
 
 	var payload = {}
@@ -23,16 +13,6 @@ function produceToUserGame(user,gameName, score, lives, level) {
 	sendToKafka(request, payload);
 
 }
-
-// function produceToUserLosses(user,gameName) {
-
-// 	var topic = "USER_LOSSES"
-// 	var ksqlQuery =`INSERT INTO ${topic} (USER_KEY) VALUES ( STRUCT(USER:='${user}', GAME_NAME:='${gameName}') );`
-
-// 	const request = new XMLHttpRequest();
-// 	sendksqlDBStmt(request, ksqlQuery);
-
-// }
 
 function produceToUserLosses(user,gameName) {
 
