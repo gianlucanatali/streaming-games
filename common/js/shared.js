@@ -31,7 +31,6 @@ function loadHighestScore(gameName, user, ctx, callback ) {
 
 	var highestScore ;
 	
-	//ksqlQuery = `select  HIGHEST_SCORE from STATS_PER_USER WHERE USER_KEY=STRUCT(USER:='${user}', GAME_NAME:='${gameName}');`;
 	ksqlQuery = `SELECT HIGHEST_SCORE FROM STATS_PER_USER WHERE ROWKEY->USER='${user}' AND ROWKEY->GAME_NAME='${gameName}';`;
 
 	var request = new XMLHttpRequest();
@@ -54,9 +53,6 @@ function loadHighestScore(gameName, user, ctx, callback ) {
 
 function getScoreboardJson(gameName,callback) {
 
-	//var userListCsv = userList.map(user_key => `STRUCT(USER:='${user_key.USER}',GAME_NAME:='${user_key.GAME_NAME}')`).join(',');
-
-	//ksqlQuery = `select USER_KEY->USER, HIGHEST_SCORE, HIGHEST_LEVEL, TOTAL_LOSSES from STATS_PER_USER WHERE GAME_NAME='${gameName}';`;
 	ksqlQuery = `SELECT ROWKEY->USER, HIGHEST_SCORE, HIGHEST_LEVEL, TOTAL_LOSSES FROM STATS_PER_USER WHERE ROWKEY->GAME_NAME='${gameName}';`;
 
 	const request = new XMLHttpRequest();
