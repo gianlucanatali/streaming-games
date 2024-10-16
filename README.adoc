@@ -185,15 +185,13 @@ CREATE TABLE LOSSES_PER_USER (
     `GAME_NAME` STRING,
     `TOTAL_LOSSES` INT,
     PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
-) WITH (
-    'kafka.partitions' = '1'
-);
+) DISTRIBUTED INTO 1 BUCKETS;
 
 INSERT INTO LOSSES_PER_USER
-SELECT 
+SELECT
     `user`,
     game_name,
-    cast(count(game_name) as int) as total_losses 
+    cast(count(game_name) as int) as total_losses
 FROM USER_LOSSES GROUP BY `user`,game_name;
 ----
 
@@ -209,10 +207,8 @@ CREATE TABLE STATS_PER_USER (
     `HIGHEST_LEVEL` INT,
     `TOTAL_LOSSES` INT,
     PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
-) WITH (
-    'kafka.partitions' = '1',
-    'kafka.cleanup-policy' = 'delete-compact' 
-);
+)  DISTRIBUTED INTO 1 BUCKETS
+  WITH( 'kafka.cleanup-policy' = 'delete-compact');
 
 INSERT INTO STATS_PER_USER
 SELECT
@@ -256,12 +252,11 @@ A query to the STATS_PER_USER table is sent to ksqlDB, to get all the players sc
 [source,sql]
 ----
 SELECT
-  ROWKEY->USER,
+  USER,
   HIGHEST_SCORE,
   HIGHEST_LEVEL,
   TOTAL_LOSSES
-FROM STATS_PER_USER 
-WHERE ROWKEY->GAME_NAME='2048';
+FROM STATS_PER_USER;
 ----
 
 == Step 7. Destroy the resources (save money!)
