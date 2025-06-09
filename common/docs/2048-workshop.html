@@ -1350,9 +1350,8 @@ Game = https://d************.cloudfront.net/</code></pre>
     `GAME_NAME` STRING,
     `TOTAL_LOSSES` INT,
     PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
-) WITH (
-    'kafka.partitions' = '1'
-);</code></pre>
+)
+DISTRIBUTED INTO 1 BUCKETS;</code></pre>
 </div>
 </div>
 <div class="imageblock">
@@ -1391,8 +1390,9 @@ FROM USER_LOSSES GROUP BY `user`,game_name;</code></pre>
     `HIGHEST_LEVEL` INT,
     `TOTAL_LOSSES` INT,
     PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
-) WITH (
-    'kafka.partitions' = '1',
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
     'kafka.cleanup-policy' = 'delete-compact'
 );</code></pre>
 </div>

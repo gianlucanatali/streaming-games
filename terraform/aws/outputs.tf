@@ -3,12 +3,12 @@
 ###########################################
 
 output "environment_id" {
-    value = confluent_environment.staging.id
+    value = module.terrasnap_solution.confluent_cloud_0_environment_id
     sensitive = true
 }
 
 output "confluent_kafka_cluster_id" {
-    value = confluent_kafka_cluster.games-demo.id
+    value = module.terrasnap_solution.confluent_cloud_0_cluster_id
     sensitive = true
 }
 

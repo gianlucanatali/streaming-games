@@ -185,9 +185,9 @@ CREATE TABLE LOSSES_PER_USER (
     `GAME_NAME` STRING,
     `TOTAL_LOSSES` INT,
     PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
-) WITH (
-    'kafka.partitions' = '1'
-);
+)
+DISTRIBUTED INTO 1 BUCKETS
+;
 
 INSERT INTO LOSSES_PER_USER
 SELECT 
@@ -209,8 +209,9 @@ CREATE TABLE STATS_PER_USER (
     `HIGHEST_LEVEL` INT,
     `TOTAL_LOSSES` INT,
     PRIMARY KEY (`USER`, `GAME_NAME`) NOT ENFORCED
-) WITH (
-    'kafka.partitions' = '1',
+) 
+DISTRIBUTED INTO 1 BUCKETS
+WITH (
     'kafka.cleanup-policy' = 'delete-compact' 
 );
 

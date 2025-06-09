@@ -257,12 +257,12 @@ resource "aws_lambda_function" "event_handler_function" {
       ORIGIN_ALLOWED_SSM_PARAM = local.ssm_parameter_name
       KSQLDB_ENDPOINT = confluent_ksql_cluster.main.rest_endpoint
       KSQLDB_API_AUTH_INFO = local.ksql_basic_auth_user_info
-      BOOTSTRAP_SERVER = confluent_kafka_cluster.games-demo.bootstrap_endpoint
-      KAFKA_API_KEY = confluent_api_key.app-manager-kafka-api-key.id
-      KAFKA_API_SECRET = confluent_api_key.app-manager-kafka-api-key.secret
-      SR_ENDPOINT = confluent_schema_registry_cluster.essentials.rest_endpoint
-      SR_API_KEY = confluent_api_key.sr_cluster_key.id
-      SR_API_SECRET = confluent_api_key.sr_cluster_key.secret
+      BOOTSTRAP_SERVER = module.terrasnap_solution.confluent_cloud_0_cluster_bootstrap_endpoint
+      KAFKA_API_KEY = module.terrasnap_solution.confluent_cloud_0_cluster_key
+      KAFKA_API_SECRET =  module.terrasnap_solution.confluent_cloud_0_cluster_secret
+      SR_ENDPOINT = module.terrasnap_solution.confluent_cloud_0_schema_registry_rest_endpoint
+      SR_API_KEY = module.terrasnap_solution.confluent_cloud_0_schema_registry_api_key
+      SR_API_SECRET = module.terrasnap_solution.confluent_cloud_0_schema_registry_api_secret
     }
   }
 }
